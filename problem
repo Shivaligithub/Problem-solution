@@ -1,0 +1,105 @@
+class TrieNode:
+    def __init__(self):
+        self.children = {}
+        self.is_end_of_word = False
+
+
+class Trie:
+    def __init__(self):
+        self.root = TrieNode()
+
+    def insert(self, word):
+        node = self.root
+        for char in word:
+            if char not in node.children:
+                node.children[char] = TrieNode()
+            node = node.children[char]
+        node.is_end_of_word = True
+    def get_suffixes_start_indices(self, word):
+        indices = []
+        node = self.root
+        for i, char in enumerate(word):
+            if char in node.children:
+                node = node.children[char]
+                if node.is_end_of_word:
+                    indices.append(i + 1)
+            else:
+                break
+        return indices
+
+
+class Pair:
+    def __init__(self, first, second):
+        self.first = first
+        self.second = second
+
+    def get_first(self):
+        return self.first
+
+    def get_second(self):
+        return self.second
+
+def read_words_from_file(file_path):
+    with open(file_path, 'r') as file:
+        words = file.read().splitlines()
+    return words
+
+
+def main():
+    # Read words from input files
+    file_paths = ["Input_01.txt", "Input_02.txt"]
+    words = []
+    for file_path in file_paths:
+        words.extend(read_words_from_file(file_path))
+
+    trie = Trie()
+    queue = []
+
+    # Fill up the queue with words which have suffixes
+    # that are candidates to be compound words
+    for word in words:
+        suf_indices = trie.get_suffixes_start_indices(word)
+        for i in suf_indices:
+            if i >= len(word):
+                break
+            queue.append(Pair(word, word[i:]))
+        trie.insert(word)
+
+    maxLength = 0
+    longest = ""
+    secMaxLength = 0
+    secLongest = ""
+    compoundWords = set()
+
+    # Process the queue to find longest and second longest compound words
+    while queue:
+        pair = queue.pop(0)
+        word = pair.get_second()
+        suf_indices = trie.get_suffixes_start_indices(word)
+
+        if suf_indices:
+            for i in suf_indices:
+                if i > len(word):
+                    break
+                if i == len(word):
+                    compound_word = pair.get_first()
+                    if len(compound_word) > maxLength:
+                        secMaxLength = maxLength
+                        secLongest = longest
+                        maxLength = len(compound_word)
+                        longest = compound_word
+                    elif len(compound_word) > secMaxLength:
+                        secMaxLength = len(compound_word)
+                        secLongest = compound_word
+                    compoundWords.add(compound_word)
+                else:
+                    queue.append(Pair(pair.get_first(), word[i:]))
+
+    # Print the results
+    print("Longest Compound Word:", longest)
+    print("Second Longest Compound Word:", secLongest)
+    print("Total Number of Compound Words:", len(compoundWords))
+
+
+if __name__ == "__main__":
+    main()
